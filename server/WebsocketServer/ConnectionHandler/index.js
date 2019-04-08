@@ -16,14 +16,15 @@ class ConnectionHandler {
     this.client.on('message', this.onMessage.bind(this));
     this.client.on('error', err => console.error(err.message));
     this.client.on('close', (code, reason) => {
-      console.log(`Disconnected. Code: ${code} Reason: ${reason}`);
+      console.log(`Disconnected ${this.id}. Code: ${code} Reason: ${reason}`);
     });
-    console.log('Connected');
+    console.log(`Connected ${this.id}`);
   }
 
   onMessage({ type, data }) {
     let frame;
     try {
+      console.log(`Received message ${type} from ${this.id}`);
       switch (type) {
         case 'listSlaves':
           frame = this.buildFrame('slaves', this.slaveService.list());

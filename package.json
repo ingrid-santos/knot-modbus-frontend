@@ -4,7 +4,6 @@
   "private": true,
   "dependencies": {
     "@material-ui/core": "^3.9.2",
-    "axios": "^0.18.0",
     "config": "^3.0.1",
     "dbus": "^1.0.3",
     "eslint-config-airbnb": "^17.1.0",

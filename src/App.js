@@ -11,16 +11,17 @@ class App extends Component {
     this.state = {
       renderCard: false,
       slaves: [],
+      slaveSrv: new SlaveService(),
       openSnack: false,
       messageSnack: ''
     };
   }
 
-  onClicked(slaveSrv) {
+  onClicked() {
+    const { slaveSrv } = this.state;
     slaveSrv.listSlaves()
       .then((slaves) => {
-        this.setState({ renderCard: true });
-        this.setState({ slaves });
+        this.setState({ renderCard: true, slaves });
       })
       .catch((err) => {
         this.setState({ openSnack: true, messageSnack: err.message });
@@ -37,11 +38,10 @@ class App extends Component {
   }
 
   render() {
-    const slaveSrv = new SlaveService();
     const { renderCard, openSnack, messageSnack } = this.state;
     return (
       <div className="App">
-        <Button className="load-button" onClick={() => this.onClicked(slaveSrv)} variant="contained" color="primary">
+        <Button className="load-button" onClick={() => this.onClicked()} variant="contained" color="primary">
           Load slaves
         </Button>
         <Snackbar
