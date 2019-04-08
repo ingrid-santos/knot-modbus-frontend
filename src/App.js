@@ -27,6 +27,10 @@ class App extends Component {
       });
   }
 
+  slaveAdded() {
+    
+  }
+
   renderCardSlaves() {
     const { slaves } = this.state;
     return slaves.map(slave => <SlaveCard key={slave.id} slave={slave} />);

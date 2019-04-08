@@ -1,7 +1,7 @@
 {
     "protocol": "DBUS",
     "slave": {
-        "address": "tcp:host=localhost,port=55556"
+        "unix":"path=/var/run/dbus/system_bus_socket"
     },
     "server": {
         "host": "localhost",

@@ -45,7 +45,43 @@ class SlaveService extends EventEmitter {
       reject(new Error('Connection is no opened'));
     });
   }
+
   // TODO: listen to events: slaveAdded, slaveRemoved and SlaveUpdated
+  async slaveAdded() {
+    return new Promise((resolve, reject) => {
+      if (this.isOpen) {
+        this.socket.send(this.buildFrame('slaveAdded'));
+        this.once('slave', slave => resolve(slave));
+        this.once('error', err => reject(err));
+        return;
+      }
+      reject(new Error('Connection is no opened'));
+    });
+  }
+
+  async slaveRemoved() {
+    return new Promise((resolve, reject) => {
+      if (this.isOpen) {
+        this.socket.send(this.buildFrame('slaveRemoved'));
+        this.once('id', id => resolve(id));
+        this.once('error', err => reject(err));
+        return;
+      }
+      reject(new Error('Connection is no opened'));
+    });
+  }
+
+  async slaveUpdated() {
+    return new Promise((resolve, reject) => {
+      if (this.isOpen) {
+        this.socket.send(this.buildFrame('slaveRemoved'));
+        this.once('slave', slave => resolve(slave));
+        this.once('error', err => reject(err));
+        return;
+      }
+      reject(new Error('Connection is no opened'));
+    });
+  }
 }
 
 export default SlaveService;
