@@ -46,8 +46,7 @@ class SlaveService extends EventEmitter {
     });
   }
 
-  // TODO: listen to events: slaveAdded, slaveRemoved and SlaveUpdated
-  async slaveAdded() {
+  async onSlaveAdded() {
     return new Promise((resolve, reject) => {
       if (this.isOpen) {
         this.socket.send(this.buildFrame('slaveAdded'));
@@ -59,30 +58,7 @@ class SlaveService extends EventEmitter {
     });
   }
 
-  async slaveRemoved() {
-    return new Promise((resolve, reject) => {
-      if (this.isOpen) {
-        this.socket.send(this.buildFrame('slaveRemoved'));
-        this.once('id', id => resolve(id));
-        this.once('error', err => reject(err));
-        return;
-      }
-      reject(new Error('Connection is no opened'));
-    });
-  }
-
-  async slaveUpdated() {
-    return new Promise((resolve, reject) => {
-      if (this.isOpen) {
-        this.socket.send(this.buildFrame('slaveRemoved'));
-        this.once('slave', slave => resolve(slave));
-        this.once('error', err => reject(err));
-        return;
-      }
-      reject(new Error('Connection is no opened'));
-    });
-  }
-  // TODO: listen to events: slaveAdded, slaveRemoved and SlaveUpdated
+  // TODO: listen to events: slaveRemoved and SlaveUpdated
 }
 
 export default SlaveService;

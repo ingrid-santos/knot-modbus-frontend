@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import './App.css';
-import Button from '@material-ui/core/Button';
+// import Button from '@material-ui/core/Button';
 import Snackbar from '@material-ui/core/Snackbar';
 import SlaveService from './services/Slave';
 import SlaveCard from './components/SlaveCard';
@@ -17,7 +17,14 @@ class App extends Component {
     };
   }
 
-  onClicked() {
+  componentDidMount() {
+    this.timer = setTimeout(() => {
+      this.listSlaves();
+    }, 1);
+    console.log('ComponentDidMount()');
+  }
+
+  listSlaves() {
     const { slaveSrv } = this.state;
     slaveSrv.listSlaves()
       .then((slaves) => {
@@ -28,9 +35,11 @@ class App extends Component {
       });
   }
 
+
   slaveAdded() {
 
   }
+
 
   renderCardSlaves() {
     const { slaves } = this.state;
@@ -41,9 +50,6 @@ class App extends Component {
     const { renderCard, openSnack, messageSnack } = this.state;
     return (
       <div className="App">
-        <Button className="load-button" onClick={() => this.onClicked()} variant="contained" color="primary">
-          Load slaves
-        </Button>
         <Snackbar
           anchorOrigin={{
             vertical: 'bottom',
