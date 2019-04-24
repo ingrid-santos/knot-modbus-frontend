@@ -1,10 +1,17 @@
 import WebSocket from 'isomorphic-ws';
 import EventEmitter from 'eventemitter3';
 
+const { promisify } = require('es6-promisify');
+
+const setTimeoutAsync = promisify(setTimeout);
+
+const MINIMUM_BACKOFF_TIME_SEC = 1;
+const MAXIMUM_BACKOFF_TIME_SEC = 32;
+
 const PROXY_EVENTS = ['close', 'error', 'unexpected-response', 'ping', 'pong', 'open'];
 
 class SlaveService extends EventEmitter {
-  constructor() {
+  constructor(publishAsync, minimumBackOffTimeSec, maximumBackOffTimeSec) {
     super();
     if (this.socket) {
       this.socket.close();
@@ -17,15 +24,43 @@ class SlaveService extends EventEmitter {
       this.isOpen = true;
       this.socket.removeEventListener('open', onOpen);
     };
+
+    this.publishAsync = publishAsync;
+    this.backOffTimeSec = minimumBackOffTimeSec || MINIMUM_BACKOFF_TIME_SEC;
+    this.maximumBackOffTimeSec = maximumBackOffTimeSec || MAXIMUM_BACKOFF_TIME_SEC;
+
     this.socket.addEventListener('open', onOpen);
-    this.socket.addEventListener('close', () => {
-      this.isOpen = false;
-      // TODO: handle reconnection if is an abnormal closure
-      this.socket.close();
-    });
+    const onClose = (e) => {
+      switch (e.code) {
+        case 1001: // NORMAL_CLOSE
+          console.log('NORMAL_CLOSE');
+          this.close();
+          break;
+        default: // ABNORMAL CLOSURE
+          console.log('ABNORMAL CLOSURE');
+          this.execute();
+          break;
+      }
+    };
+
+    this.socket.addEventListener('close', onClose);
     PROXY_EVENTS.forEach((eventName) => {
       this.socket.addEventListener(eventName, event => this.emit(eventName, event));
     });
+  }
+
+  async execute() {
+    try {
+      await this.publishAsync();
+    } catch (e) {
+      const delayMs = 1000 * (this.backOffTimeSec + Math.random());
+      if (this.backOffTimeSec < MAXIMUM_BACKOFF_TIME_SEC) {
+        this.backOffTimeSec *= 2;
+      }
+      console.log(`${new Date().toString()} - backing off for ${delayMs}ms`);
+      await setTimeoutAsync(delayMs);
+      await this.execute();
+    }
   }
 
   handleMessage(event) {
