@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unused-state */
 import React, { Component } from 'react';
 import './App.css';
 import Grid from '@material-ui/core/Grid';
@@ -5,6 +6,7 @@ import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import Snackbar from '@material-ui/core/Snackbar';
+import Loading from 'react-loading-spinkit';
 import SlaveService from './services/Slave';
 import SlaveCard from './components/SlaveCard';
 
@@ -16,17 +18,25 @@ class App extends Component {
       slaves: [],
       slaveSrv: new SlaveService(),
       openSnack: false,
-      messageSnack: ''
+      messageSnack: '',
+      show: false
     };
   }
 
   componentDidMount() {
     const { slaveSrv } = this.state;
-    this.timer = slaveSrv.once('open', () => {
+    this.timer = slaveSrv.on('open', () => {
       this.listSlaves();
     });
     // TODO: if not opened show a message to the user,
     // like to refresh page or a spinner with a timeout to try again
+    this.time = slaveSrv.on('close', () => {
+      this.showSpinner();
+    });
+  }
+
+  showSpinner() {
+    this.setState({ show: true });
   }
 
   listSlaves() {
@@ -38,7 +48,7 @@ class App extends Component {
         this.monitorSlaves();
       })
       .catch((err) => {
-        this.setState({ openSnack: true, messageSnack: err.message });
+        this.setState({ openSnack: true, messageSnack: err.message, show: true });
       });
   }
 
@@ -110,6 +120,10 @@ class App extends Component {
             </Typography>
           </Toolbar>
         </AppBar>
+        <div style={{ height: '100vh', width: '100vw' }}>
+          { renderCard === true ? this.renderCardSlaves() : <Loading show /> }
+        </div>
+
         <Snackbar
           anchorOrigin={{
             vertical: 'bottom',
@@ -121,7 +135,7 @@ class App extends Component {
           message={messageSnack}
         />
 
-        { renderCard === true ? this.renderCardSlaves() : null }
+
       </div>
     );
   }
