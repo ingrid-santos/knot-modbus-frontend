@@ -1,35 +1,29 @@
 import WebSocket from 'isomorphic-ws';
 import EventEmitter from 'eventemitter3';
 
-const { promisify } = require('es6-promisify');
-
-const setTimeoutAsync = promisify(setTimeout);
-
 const MINIMUM_BACKOFF_TIME_SEC = 1;
 const MAXIMUM_BACKOFF_TIME_SEC = 32;
 
 const PROXY_EVENTS = ['close', 'error', 'unexpected-response', 'ping', 'pong', 'open'];
 
 class SlaveService extends EventEmitter {
-  constructor(publishAsync, minimumBackOffTimeSec, maximumBackOffTimeSec) {
+  constructor() {
     super();
-    if (this.socket) {
-      this.socket.close();
-    }
+    this.retries = 0;
+    this.backOffTimeSec = MINIMUM_BACKOFF_TIME_SEC;
+
     const { hostname } = window.location;
     const port = window.location.protocol === 'https:' ? 443 : 3004;
     this.socket = new WebSocket(`ws://${hostname}:${port}/ws`);
     this.socket.addEventListener('message', this.handleMessage.bind(this));
+
     const onOpen = () => {
-      this.isOpen = true;
+      this.retries = 0;
+      this.backOffTimeSec = MINIMUM_BACKOFF_TIME_SEC;
       this.socket.removeEventListener('open', onOpen);
     };
-
-    this.publishAsync = publishAsync;
-    this.backOffTimeSec = minimumBackOffTimeSec || MINIMUM_BACKOFF_TIME_SEC;
-    this.maximumBackOffTimeSec = maximumBackOffTimeSec || MAXIMUM_BACKOFF_TIME_SEC;
-
     this.socket.addEventListener('open', onOpen);
+
     const onClose = (e) => {
       switch (e.code) {
         case 1001: // NORMAL_CLOSE
@@ -38,29 +32,40 @@ class SlaveService extends EventEmitter {
           break;
         default: // ABNORMAL CLOSURE
           console.log('ABNORMAL CLOSURE');
-          this.execute();
+          this.reconnect();
           break;
       }
     };
-
     this.socket.addEventListener('close', onClose);
+  
     PROXY_EVENTS.forEach((eventName) => {
       this.socket.addEventListener(eventName, event => this.emit(eventName, event));
     });
   }
 
-  async execute() {
-    try {
-      await this.publishAsync();
-    } catch (e) {
-      const delayMs = 1000 * (this.backOffTimeSec + Math.random());
+  connect() {
+    if (this.socket) {
+      this.socket.close();
+    }
+  }
+
+  reconnect() {
+    if (this.retries === 0) {
+      this.delayMs = Math.random();
+      console.log('if retries = 0, delayMs: ', this.delayMs);
+    } else {
+      this.delayMs = 1000 * (this.backOffTimeSec + Math.random());
+      console.log('else delayMs: ', this.delayMs);
       if (this.backOffTimeSec < MAXIMUM_BACKOFF_TIME_SEC) {
         this.backOffTimeSec *= 2;
+        console.log('backOffTimeSec: ', this.backOffTimeSec);
       }
-      console.log(`${new Date().toString()} - backing off for ${delayMs}ms`);
-      await setTimeoutAsync(delayMs);
-      await this.execute();
     }
+    setTimeout(() => this.connect, this.delayMs);
+    this.retries += 1;
+    console.log('retries... ', this.retries);
+
+    this.emit('reconnect');
   }
 
   handleMessage(event) {
