@@ -17,8 +17,7 @@ class App extends Component {
       slaves: [],
       slaveSrv: new SlaveService(),
       openSnack: false,
-      messageSnack: '',
-      show: false
+      messageSnack: ''
     };
   }
 
