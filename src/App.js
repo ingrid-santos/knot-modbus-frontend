@@ -6,7 +6,7 @@ import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import Snackbar from '@material-ui/core/Snackbar';
-import Loading from 'react-loading-spinkit';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import SlaveService from './services/Slave';
 import SlaveCard from './components/SlaveCard';
 
@@ -18,25 +18,28 @@ class App extends Component {
       slaves: [],
       slaveSrv: new SlaveService(),
       openSnack: false,
-      messageSnack: '',
-      show: false
+      messageSnack: ''
     };
   }
 
   componentDidMount() {
     const { slaveSrv } = this.state;
+    slaveSrv.connect();
     this.timer = slaveSrv.on('open', () => {
+      console.log('connection opened, listing slaves...');
       this.listSlaves();
     });
     // TODO: if not opened show a message to the user,
     // like to refresh page or a spinner with a timeout to try again
-    this.time = slaveSrv.on('close', () => {
-      this.showSpinner();
+    this.timer = slaveSrv.on('close', () => {
+      console.log('connection closed, show feedback');
+      this.setState({ renderCard: false });
+      this.renderCircularProgress();
+      setTimeout(() => {
+        console.log('try reconnect...');
+        slaveSrv.reconnect();
+      }, 1000);
     });
-  }
-
-  showSpinner() {
-    this.setState({ show: true });
   }
 
   listSlaves() {
@@ -109,6 +112,12 @@ class App extends Component {
     );
   }
 
+  renderCircularProgress() {
+    return (
+      <CircularProgress variant="indeterminate" />
+    );
+  }
+
   render() {
     const { renderCard, openSnack, messageSnack } = this.state;
     return (
@@ -120,10 +129,6 @@ class App extends Component {
             </Typography>
           </Toolbar>
         </AppBar>
-        <div style={{ height: '100vh', width: '100vw' }}>
-          { renderCard === true ? this.renderCardSlaves() : <Loading show /> }
-        </div>
-
         <Snackbar
           anchorOrigin={{
             vertical: 'bottom',
@@ -134,6 +139,8 @@ class App extends Component {
           onClose={() => this.setState({ openSnack: false })}
           message={messageSnack}
         />
+
+        { renderCard === true ? this.renderCardSlaves() : this.renderCircularProgress() }
 
 
       </div>
