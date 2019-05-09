@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unused-state */
 import React, { Component } from 'react';
 import './App.css';
 import Grid from '@material-ui/core/Grid';
@@ -50,7 +51,7 @@ class App extends Component {
         this.monitorSlaves();
       })
       .catch((err) => {
-        this.setState({ openSnack: true, messageSnack: err.message });
+        this.setState({ openSnack: true, messageSnack: err.message, show: true });
       });
   }
 
