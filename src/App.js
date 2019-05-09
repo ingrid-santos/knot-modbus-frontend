@@ -1,4 +1,3 @@
-/* eslint-disable react/no-unused-state */
 import React, { Component } from 'react';
 import './App.css';
 import Grid from '@material-ui/core/Grid';
@@ -18,7 +17,8 @@ class App extends Component {
       slaves: [],
       slaveSrv: new SlaveService(),
       openSnack: false,
-      messageSnack: ''
+      messageSnack: '',
+      show: false
     };
   }
 
@@ -51,7 +51,7 @@ class App extends Component {
         this.monitorSlaves();
       })
       .catch((err) => {
-        this.setState({ openSnack: true, messageSnack: err.message, show: true });
+        this.setState({ openSnack: true, messageSnack: err.message });
       });
   }
 

@@ -7,7 +7,7 @@ const MAXIMUM_BACKOFF_TIME_SEC = 32;
 const PROXY_EVENTS = ['close', 'error', 'unexpected-response', 'ping', 'pong', 'open'];
 
 class SlaveService extends EventEmitter {
-  constructor() {
+  constructor(publishAsync, minimumBackOffTimeSec, maximumBackOffTimeSec) {
     super();
     this.retries = 0;
     this.backOffTimeSec = MINIMUM_BACKOFF_TIME_SEC;
